@@ -1,0 +1,459 @@
+cv : working knowledge of pl sql
+
+PLSQL
+======
+
+
+ANONYMOUS PROCEDURE
+-------------------
+SET SERVEROUTPUT ON;
+
+DECLARE
+    x number;
+    y number;
+    z number;
+BEGIN
+     x := 5;
+     y :=3 ;
+     z := x+y;
+    DBMS_OUTPUT.PUT_LINE('z =  ' || z);
+    DBMS_OUTPUT.PUT_LINE('hello pl sql');
+END;
+/
+
+TABLE CREATING
+==============
+create table employee(emp_id number(6) not null,
+                      emp_name varchar2(255),
+                      city varchar2(255),
+                      department varchar2(255),
+                      salary number(10,2),
+                      primary key(emp_id)
+                      );
+INSERT INTO TABLE
+==================
+ 
+insert into employee values(2,'ronald weasley','manchestar','ADMIN',76000);
+insert into employee values(3,'hermoine granger','london','IT',95000);
+insert into employee values(4,'neville longbottom','survey','ADMIN',55000);
+insert into employee values(5,'draco malfoy','manchestar','IT',90000);
+insert into employee values(6,'frodo baggins','london','survey',95000);
+
+STORED PROCEDURE
+-----------------
+******we cannot use declare in stored procedure******
+
+
+CREATE OR REPLACE PROCEDURE welcome_user(name IN varchar2) IS
+BEGIN
+	dbms_output.put_line('welcome ' || name );
+END;
+/
+
+EXECUTE PROCEDURE 
+-----------------
+3 types of running them:
+
+1.execute welcome_user('harry');
+2.call welcome_user('harry2');
+3.exec welcome_user('harry3');
+4.
+BEGIN
+	welcome_user('harry');
+END:
+/
+
+MINIMUM NUMBER PROCEDURE
+------------------------
+
+create or replace procedure min_number(n1 IN number, n2 IN number, result OUT number) IS
+BEGIN
+	if n1 < n2 then
+		result := n1;
+	else 
+		result := n2;
+	end if;
+END;
+/
+
+calling the min_number
+---------------------
+DECLARE
+    x number;
+    y number;
+    z number;
+BEGIN
+    x := 9;
+    y := 7;
+    min_number(x,y,z);
+    dbms_output.put_line('minimum number is ' || z);
+END;
+/
+
+employee salary minimum procedure
+------------------------------------------
+create or replace procedure emp_max_salary(result OUT number) IS
+BEGIN
+    SELECT MAX(salary) INTO result
+    from employee;
+END;
+
+calling it
+-----------
+declare
+	result number;
+begin
+	emp_max_salary(result);
+	dbms_output.put_line(result);	 
+end;
+/
+
+for loop
+---------
+declare
+    i number;
+begin
+    for i in 10..20 loop
+        dbms_output.put_line(i);
+    end loop;
+end;
+/
+
+reverse for loop
+-------------------
+declare
+    i number;
+begin
+    for i in reverse 10..20 loop
+        dbms_output.put_line(i);
+    end loop;
+end;
+/
+
+Increase in percent of employee salary by department 
+----------------------
+
+create or replace procedure inc_salary_bydepartment(percent in number,dept in varchar2) is
+begin
+    update employee set salary = (salary+(salary*(percent/100))) where department=dept;
+end;
+/
+
+calling it
+-----------------------
+declare
+    x number;
+    y varchar2(255);
+begin
+    x :=5;
+    y :='ADMIN';--casing matters
+    inc_salary_bydepartment(x,y);
+end;
+/
+
+basic loops
+-----------
+declare
+	x number := 1;
+begin
+	loop
+		dbms_output.put_line(x);
+		x := x+1;
+		if x=6 then
+			exit;
+		end if;
+	 end loop;
+end;
+/
+
+while loop
+------------
+declare
+	x number := 1;
+begin
+	while x<6 loop
+		dbms_output.put_line(x);
+		x := x+1;
+	 end loop;
+end;
+/
+
+labelled loop
+--------------
+declare
+	x number;
+	y number;
+begin
+	for x in 1..3 loop
+	    for y in 1..3 loop
+	        dbms_output.put_line('x= ' || x || 'y= ' || y );
+	    end loop ;
+	 end loop ;
+end;
+/
+ 
+below snip also gives same output 
+------------------------
+
+declare
+	x number;
+	y number;
+begin
+    <<outer_loop>>
+	for x in 1..3 loop
+	    <<inner_loop>>
+	    for y in 1..3 loop
+	        dbms_output.put_line('x= ' || x || 'y= ' || y );
+	    end loop inner_loop;
+	 end loop outer_loop;
+end;
+/
+
+
+key words
+==========
+--------1.if-------
+
+declare
+	x number := 1;
+begin
+	while x<6 loop
+		dbms_output.put_line(x);
+		x := x+1;
+		if x=3 then
+		    exit ;
+		 end if;
+	 end loop;
+end;
+/
+
+---------2. exit when--------
+
+declare
+	x number := 1;
+begin
+	while x<6 loop
+		dbms_output.put_line(x);
+		x := x+1;
+		exit when x=3 ;
+	 end loop;
+end;
+/
+
+---------3.goto  label------ 
+
+declare
+	x number := 1;
+begin
+    <<loop_label>>
+	while x<6 loop
+		dbms_output.put_line(x);
+		x := x+1;
+		if x<4 then
+		    goto loop_label;
+	     end if;
+	 end loop;
+end;
+/
+
+exception handling
+==================
+procedure
+-----------
+create or replace procedure employee_detailes(e_id in number,e_name out varchar2,e_salary out number) is
+begin
+    if e_id < 0 then
+         raise sys_invalid_rowid;
+    else
+    select emp_name,salary into e_name,e_salary
+    from employee 
+    where emp_id=e_id;
+    end if;
+exception 
+    when sys_invalid_rowid then
+        dbms_output.put_line('id cannot be less than zero');
+    when NO_DATA_FOUND then 
+        dbms_output.put_line('please give a valid employee id');
+    when others then 
+    dbms_output.put_line('oops...! some thing went wrong');
+end;
+/
+
+calling it
+-----------
+declare 
+    id number;
+    sal number;
+    name varchar(100);
+    
+begin
+    id := 1;
+    employee_detailes(id,name,sal);
+    dbms_output.put_line(name || ' and ' || sal);
+end;
+/
+
+
+user defined exception
+-------------------------------------		
+declare 
+    id number;
+    salary number;
+    name varchar(100);
+    Invalid_Id_Exception exception;
+begin
+    id := -2;
+    if id <=0 then
+        raise Invalid_Id_Exception;
+    else 
+    select emp_name,salary into name,salary
+    from employee 
+    where emp_id=id;
+    dbms_output.put_line(name || ' and ' || salary);
+    end if;
+exception 
+           when Invalid_Id_Exception then
+                dbms_output.put_line('id cannot be zero or less than 1');    
+end;
+/
+
+functions
+----------
+* functions are same as procedure, where we can return something and we can declare variables
+after the create line;;
+
+example:
+---------
+create or replace function count_total_employee return number is 
+    total_emp number;
+begin
+    select count(emp_id) into total_emp from employee;
+     return total_emp;
+end;
+/
+
+calling it
+----------
+
+begin
+  dbms_output.put_line('total number of employees are: '|| count_total_employee);    
+end;
+/
+
+
+----------------------
+
+create or replace function emp_avg_salary_dept(dept varchar2) return number is
+avg_salary number;
+begin
+    select avg(salary) into avg_salary from employee where department=dept;
+    return avg_salary;
+end;
+/
+
+calling
+-------
+declare
+dept varchar2(100);
+begin
+    dept := 'ADMIN';
+dbms_output.put_line('employee avg salary from ' || dept || ' is ' || emp_avg_salary_dept(dept));
+end;
+/
+
+
+taking input 
+------------
+accept x number prompt 'enter a number'
+declare
+    val number;
+begin
+    val := &x;
+    dbms_output.put_line('you entered  '|| val);
+end;
+/
+
+
+IN OUT PARAMETER PROCEDURE . SAME PARAMETER IS USED FOR INPUT AND OUTPUT
+------------------------------------------------------------------------
+--square of a number
+
+create or replace procedure square_of(num in out number) is
+begin
+    num := num * num;
+end;
+/
+
+calling it
+-----------
+declare
+    x number;
+begin 
+    x :=10;
+    square_of(x);
+    dbms_output.put_line(x);
+end;
+/
+
+constant variable - it is final and cannot be updated
+-------------------------------------------
+declare
+    radius number :=5 ;   
+    pi constant number := 3.14 ;
+    result number ;
+begin
+    result := radius* radius * pi;
+    dbms_output.put_line(result);
+end;
+/
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-
