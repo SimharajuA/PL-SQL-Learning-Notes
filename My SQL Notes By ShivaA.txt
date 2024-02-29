@@ -1,0 +1,984 @@
+Data Management
+===============
+- SQL Programming with MySql DB
+- MongoDB document DB 
+- PL/SQL with Oracle 
+
+
+SQL Programming with MySql DB
+- DB Design
+    - Anomalies: Insertion, Updation, Deletion 
+    - Types of Relationships : 1:1, 1:M, M:1, M:M
+    - ER Daigram 
+    - Keys: Primary Key, Foreign Key, Super Key, Candidate Key 
+    - Normalization: 1NF, 2NF, 3NF, BCNF
+- DB Query
+    - DDL, DML, DSL 
+    - where clause: Between, LIKE, IN 
+    - Group by 
+    - Having
+    - Order by
+    - limit with offset
+    - Multi Table Queries
+        - Manual Mapping Technique
+        - Nested SubQueries
+        - Joins
+            - Inner Join 
+            - Outer Join    
+                - LEFT 
+                - RIGHT
+
+
+Create and Use the DB
+=====================
+mysql> create database pget_june_main;
+Query OK, 1 row affected (0.02 sec)
+
+mysql> use pget_june_main;
+Database changed
+
+mysql> show tables;
+Empty set (0.01 sec)
+
+
+Create table 
+=============
+mysql> create table employee(id int,name varchar(255),salary double ,city varchar(255));
+Query OK, 0 rows affected (0.04 sec)
+
+mysql> show tables;
++--------------------------+
+| Tables_in_pget_june_main |
++--------------------------+
+| employee                 |
++--------------------------+
+1 row in set (0.00 sec)
+
+mysql> describe employee;
++--------+--------------+------+-----+---------+-------+
+| Field  | Type         | Null | Key | Default | Extra |
++--------+--------------+------+-----+---------+-------+
+| id     | int(11)      | YES  |     | NULL    |       |
+| name   | varchar(255) | YES  |     | NULL    |       |
+| salary | double       | YES  |     | NULL    |       |
+| city   | varchar(255) | YES  |     | NULL    |       |
++--------+--------------+------+-----+---------+-------+
+4 rows in set (0.02 sec)
+
+mysql> drop table employee;
+Query OK, 0 rows affected (0.01 sec)
+
+
+Working with Contraints
+=======================
+mysql> create table employee(id int primary key auto_increment,name varchar(255) not null,salary double default 0,city varchar(255));
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> describe employee;
++--------+--------------+------+-----+---------+----------------+
+| Field  | Type         | Null | Key | Default | Extra          |
++--------+--------------+------+-----+---------+----------------+
+| id     | int(11)      | NO   | PRI | NULL    | auto_increment |
+| name   | varchar(255) | NO   |     | NULL    |                |
+| salary | double       | YES  |     | 0       |                |
+| city   | varchar(255) | YES  |     | NULL    |                |
++--------+--------------+------+-----+---------+----------------+
+
+Add a column to the table 
+=========================
+mysql> ALTER TABLE employee
+    -> ADD COLUMN departmentName varchar(255) not null;
+Query OK, 0 rows affected (0.05 sec)
+Records: 0  Duplicates: 0  Warnings: 0
+
+mysql> describe employee;
++----------------+--------------+------+-----+---------+----------------+
+| Field          | Type         | Null | Key | Default | Extra          |
++----------------+--------------+------+-----+---------+----------------+
+| id             | int(11)      | NO   | PRI | NULL    | auto_increment |
+| name           | varchar(255) | NO   |     | NULL    |                |
+| salary         | double       | YES  |     | 0       |                |
+| city           | varchar(255) | YES  |     | NULL    |                |
+| departmentName | varchar(255) | NO   |     | NULL    |                |
++----------------+--------------+------+-----+---------+----------------+
+
+Insert records in the table
+============================
+mysql> insert into employee(name,salary,city,departmentName) values ('harry potter',85000,'london','IT');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into employee(name,salary,city,departmentName) values
+    -> ('ronald weasley',75000,'manchester','ADMIN'),
+    -> ('hermione granger',95000,'london','IT');
+Query OK, 2 rows affected (0.01 sec)
+Records: 2  Duplicates: 0  Warnings: 0
+
+mysql> select * from employee;
++----+------------------+--------+------------+----------------+
+| id | name             | salary | city       | departmentName |
++----+------------------+--------+------------+----------------+
+|  1 | harry potter     |  85000 | london     | IT             |
+|  2 | ronald weasley   |  75000 | manchester | ADMIN          |
+|  3 | hermione granger |  95000 | london     | IT             |
++----+------------------+--------+------------+----------------+
+
+/* Filter using where clause */ 
+
+Structure of the Query - SQL
+-----------------------
+select <attr-names>   [C]
+from <table-name>     [C]
+where <conditions on attributes>  [O]
+group by <attr>       [O]
+having <grouping-function> [O]
+order by <attr> ASC | DESC   [O]
+limit n                 [O]
+offset n                    [O]
+    
+[C]: Compulsary   [O]: Optional
+
+Q. Select name and city of employee having salary greater than 82000. 
+
+select name,city,salary 
+from employee
+where salary>82000 
+
++------------------+--------+--------+
+| name             | city   | salary |
++------------------+--------+--------+
+| harry potter     | london |  85000 |
+| hermione granger | london |  95000 |
++------------------+--------+--------+
+
+Q. Display employee details having salary less than 85000 and greater than 75000. 
+[between]
+
+select name,city,salary
+from employee
+where salary between 75000 AND 85000
+
+Note: 75000 and 85000 and included in the result set 
+
++----------------+------------+--------+
+| name           | city       | salary |
++----------------+------------+--------+
+| harry potter   | london     |  85000 |
+| ronald weasley | manchester |  75000 |
++----------------+------------+--------+
+
+Q. display all employee living in following cities [london, paris, mumbai]
+[IN]
+
+select name,city
+from employee
+where city IN ('london','paris','mumbai')
+
++------------------+--------+
+| name             | city   |
++------------------+--------+
+| harry potter     | london |
+| hermione granger | london |
++------------------+--------+
+
+NOT IN
+------
+select name,city
+from employee
+where city NOT IN ('london','paris','mumbai')
+
++----------------+------------+
+| name           | city       |
++----------------+------------+
+| ronald weasley | manchester |
++----------------+------------+
+
+LIKE
+=====
+Q. display employee details having pattern "harry" in their names. 
+
+mysql> select name
+    -> from employee
+    -> where name LIKE '%harry%';
++--------------+
+| name         |
++--------------+
+| harry potter |
++--------------+
+
+Q. Display employees having their names starting with 
+char 'h'. 
+
+mysql> select name
+    -> from employee
+    -> where name LIKE 'h%';
++------------------+
+| name             |
++------------------+
+| harry potter     |
+| hermione granger |
++------------------+
+
+Q. Display employees having their names ending with 
+char 'y'.
+
+mysql> select name
+    -> from employee
+    -> where name LIKE '%y';
++----------------+
+| name           |
++----------------+
+| ronald weasley |
+| sarah demsey   |
++----------------+
+
+NOTE
+----
+2nd char from beginning: _a%
+
+mysql> select name
+    -> from employee
+    -> where name LIKE '_a%';
++--------------+
+| name         |
++--------------+
+| harry potter |
+| sarah demsey |
++--------------+
+
+
+2nd last character 'e'
+
+mysql> select name
+    -> from employee
+    -> where name LIKE '%e_';
++------------------+
+| name             |
++------------------+
+| harry potter     |
+| ronald weasley   |
+| hermione granger |
+| sarah demsey     |
++------------------+
+
+Grouping Functions / Aggregate Functions
+========================================
+1. min()
+2. max()
+3. sum()
+4. avg()
+5. count() 
+
+group by clause: 
+----------------
+group by groups the tuples(records/rows) based on the attribute given in group by clause. 
+Once the grouping is done, we can call grouping functions on these groups. 
+
+
+select COUNT(id)
+from employee
+group by city; 
+
+[city=london]
+|  1 | harry potter     |  85000 | london     | IT             |  3 | hermione granger |  95000 | london     | IT             |  4 | sarah demsey     |  82000 | london     | ADMIN           
+[city=manchester]
+|  2 | ronald weasley   |  75000 | manchester | ADMIN          
+
++-----------+
+| COUNT(id) |
++-----------+
+|         3 |
+|         1 |
++-----------+
+
+select city,COUNT(id)
+from employee
+group by city; 
+
++------------+-----------+
+| city       | COUNT(id) |
++------------+-----------+
+| london     |         3 |
+| manchester |         1 |
++------------+-----------+
+
+select city,COUNT(id) as Number_Of_Employees
+from employee
+group by city;
+
++------------+---------------------+
+| city       | Number_Of_Employees |
++------------+---------------------+
+| london     |                   3 |
+| manchester |                   1 |
++------------+---------------------+
+
+Q. Display average salary of employees working in each department. 
+
+select departmentName,AVG(salary) as Average_Salary
+from employee
+group by departmentName; 
+
+[departmentName='IT']
+|  1 | harry potter     |  85000 | london     | IT             |  3 | hermione granger |  95000 | london     | IT             
+
+[departmentName='ADMIN']
+|  2 | ronald weasley   |  75000 | manchester | ADMIN          |  4 | sarah demsey     |  82000 | london     | ADMIN          
+
++----------------+----------------+
+| departmentName | Average_Salary |
++----------------+----------------+
+| ADMIN          |          78500 |
+| IT             |          90000 |
++----------------+----------------+
+
+Q. Display number of employees from each city. the result set must have the cities that have more than 1 employee. 
+
+select city,count(id)
+from employee
+group by city;   
+
+**********MISTAKE**************
+select city,count(id)
+from employee
+where count(id) > 1
+group by city;   
+
+ERROR 1111 (HY000): Invalid use of group function
+
+select city,count(id) as cnt_emp
+from employee
+where cnt_emp > 1
+group by city;
+*******************************
+NOTE: we cannot call grouping function in where clause
+
+select city,count(id)
+from employee
+group by city
+having count(id)>1
+
++--------+-----------+
+| city   | count(id) |
++--------+-----------+
+| london |         3 |
++--------+-----------+
+
+select city,count(id) as cnt_emp
+from employee
+group by city
+having cnt_emp>1
+
++--------+---------+
+| city   | cnt_emp |
++--------+---------+
+| london |       3 |
++--------+---------+
+
+Q. Display average salary of employee for each department with max value first. 
+
+select departmentName,avg(salary)
+from employee
+group by departmentName
+order by avg(salary) DESC
+ 
++----------------+-------------+
+| departmentName | avg(salary) |
++----------------+-------------+
+| IT             |       90000 |
+| ADMIN          |       78500 |
++----------------+-------------+
+
+NOTE: 
+ORDER BY avg(salary) :- this is by default ASC 
+so no need to write ASC 
+
+ASC: Ascending (1..2..3)
+DESC: Descending (3..2..1)
+
+Q. Display all employees. [Result set must have only 3 records maximum]
+
+select *
+from employee
+limit 3;  
+
++----+------------------+--------+------------+----------------+
+| id | name             | salary | city       | departmentName |
++----+------------------+--------+------------+----------------+
+|  1 | harry potter     |  85000 | london     | IT             |
+|  2 | ronald weasley   |  75000 | manchester | ADMIN          |
+|  3 | hermione granger |  95000 | london     | IT             |
++----+------------------+--------+------------+----------------+
+
+
+Q. Display all employees. [Result set must have only 3 records maximum. skip first record]
+
+select *
+from employee
+limit 3
+offset 1; 
+
++----+------------------+--------+------------+----------------+
+| id | name             | salary | city       | departmentName |
++----+------------------+--------+------------+----------------+
+|  2 | ronald weasley   |  75000 | manchester | ADMIN          |
+|  3 | hermione granger |  95000 | london     | IT             |
+|  4 | sarah demsey     |  82000 | london     | ADMIN          |
++----+------------------+--------+------------+----------------+
+
+select *
+from employee
+limit 3
+offset 2;
+
++----+------------------+--------+--------+----------------+
+| id | name             | salary | city   | departmentName |
++----+------------------+--------+--------+----------------+
+|  3 | hermione granger |  95000 | london | IT             |
+|  4 | sarah demsey     |  82000 | london | ADMIN          |
++----+------------------+--------+--------+----------------+
+
+Alternative way to give the offset
+----------------------------------
+select *
+from employee
+limit 1,3   --> limit offset,limit
+ 
++----+------------------+--------+------------+----------------+
+| id | name             | salary | city       | departmentName |
++----+------------------+--------+------------+----------------+
+|  2 | ronald weasley   |  75000 | manchester | ADMIN          |
+|  3 | hermione granger |  95000 | london     | IT             |
+|  4 | sarah demsey     |  82000 | london     | ADMIN          |
++----+------------------+--------+------------+----------------+
+
+UPDATE
+------
+Q. Update the record having id: 1 with following values 
+name: Harry Potter
+salary: 88000
+departmentName: ADMIN
+
+syntax
+------
+update <tbl-name>
+SET <column=value>,<column-value>
+WHERE <condition>
+
+query
+-----
+update employee
+set name='Harry Potter',salary=88000,departmentName='ADMIN'
+where id=1
+
++----+------------------+--------+------------+----------------+
+| id | name             | salary | city       | departmentName |
++----+------------------+--------+------------+----------------+
+|  1 | Harry Potter     |  88000 | london     | ADMIN          |
+
+
+
+DELETE
+------
+delete from employee where id=4
+
+mysql> select * from employee;
++----+------------------+--------+------------+----------------+
+| id | name             | salary | city       | departmentName |
++----+------------------+--------+------------+----------------+
+|  1 | Harry Potter     |  88000 | london     | ADMIN          |
+|  2 | ronald weasley   |  75000 | manchester | ADMIN          |
+|  3 | hermione granger |  95000 | london     | IT             |
++----+------------------+--------+------------+----------------+
+
+SQL Queries on Multiple Tables
+==============================
+Schema
+------
+instructor
++--------+-------------+------+-----+---------+----------------+
+| Field  | Type        | Null | Key | Default | Extra          |
++--------+-------------+------+-----+---------+----------------+
+| id     | int(11)     | NO   | PRI | NULL    | auto_increment |
+| name   | varchar(45) | NO   |     | NULL    |                |
+| salary | double      | YES  |     | 0       |                |
+| city   | varchar(45) | NO   |     | NULL    |                |
++--------+-------------+------+-----+---------+----------------+
+
+instructor_course
+-----------------
++---------------+---------+------+-----+---------+-------+
+| Field         | Type    | Null | Key | Default | Extra |
++---------------+---------+------+-----+---------+-------+
+| instructor_id | int(11) | NO   | PRI | NULL    |       |
+| course_id     | int(11) | NO   | PRI | NULL    |       |
++---------------+---------+------+-----+---------+-------+
+
+course
+------
++---------------+-------------+------+-----+---------+----------------+
+| Field         | Type        | Null | Key | Default | Extra          |
++---------------+-------------+------+-----+---------+----------------+
+| id            | int(11)     | NO   | PRI | NULL    | auto_increment |
+| name          | varchar(45) | NO   |     | NULL    |                |
+| credits       | int(11)     | NO   |     | 0       |                |
+| department_id | int(11)     | NO   | MUL | NULL    |                |
++---------------+-------------+------+-----+---------+----------------+
+
+department
+----------
++-------+-------------+------+-----+---------+----------------+
+| Field | Type        | Null | Key | Default | Extra          |
++-------+-------------+------+-----+---------+----------------+
+| id    | int(11)     | NO   | PRI | NULL    | auto_increment |
+| name  | varchar(45) | NO   |     | NULL    |                |
++-------+-------------+------+-----+---------+----------------+
+
+mysql> insert into instructor(name,salary,city) values ('harry potter', 85000, 'london');
+Query OK, 1 row affected (0.02 sec)
+
+mysql> insert into instructor(name,salary,city) values ('ronald weasley', 75000, 'liverpool');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into instructor(name,salary,city) values ('hermione granger', 95000, 'london');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from instructor;
++----+------------------+--------+-----------+
+| id | name             | salary | city      |
++----+------------------+--------+-----------+
+|  1 | harry potter     |  85000 | london    |
+|  2 | ronald weasley   |  75000 | liverpool |
+|  3 | hermione granger |  95000 | london    |
++----+------------------+--------+-----------+
+
+
+mysql> insert into department(name) values ('IT');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into department(name) values ('COMPS');
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from department;
++----+-------+
+| id | name  |
++----+-------+
+|  1 | IT    |
+|  2 | COMPS |
++----+-------+
+
+
+mysql> insert into course(name,credits,department_id) values ('Java Programming',100,1);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into course(name,credits,department_id) values ('SQL Programming',80,2);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into course(name,credits,department_id) values ('Python Programming',70,2);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into course(name,credits,department_id) values ('MongoDB',50,1);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into course(name,credits,department_id) values ('Java Spring',100,1);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into course(name,credits,department_id) values ('Angular Programming',90,2);
+Query OK, 1 row affected (0.02 sec)
+
+
+mysql> select * from course;
++----+---------------------+---------+---------------+
+| id | name                | credits | department_id |
++----+---------------------+---------+---------------+
+|  2 | Java Programming    |     100 |             1 |
+|  3 | SQL Programming     |      80 |             2 |
+|  4 | Python Programming  |      70 |             2 |
+|  5 | MongoDB             |      50 |             1 |
+|  6 | Java Spring         |     100 |             1 |
+|  7 | Angular Programming |      90 |             2 |
++----+---------------------+---------+---------------+
+
+mysql> insert into instructor_course values (1,2);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into instructor_course values (1,6);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into instructor_course values (2,4);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into instructor_course values (2,5);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into instructor_course values (3,3);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into instructor_course values (3,7);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> insert into instructor_course values (3,2);
+Query OK, 1 row affected (0.00 sec)
+
+mysql> insert into instructor_course values (1,3);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from instructor_course;
++---------------+-----------+
+| instructor_id | course_id |
++---------------+-----------+
+|             1 |         2 |
+|             3 |         2 |
+|             1 |         3 |
+|             3 |         3 |
+|             2 |         4 |
+|             2 |         5 |
+|             1 |         6 |
+|             3 |         7 |
++---------------+-----------+
+
+MANUAL MAPPING TECHNIQUE
+========================
+Q1. Display all courses taught by instructor 'harry potter'. 
+[Use Manual Mapping Technique]
+
+select course.name
+from instructor,instructor_course,course
+where instructor.id = instructor_course.instructor_id AND
+      instructor_course.course_id = course.id AND 
+      instructor.name='harry potter'    
+
+
+select c.name as Courses 
+from instructor as i,instructor_course as ic,course as c
+where i.id = ic.instructor_id AND ic.course_id = c.id AND
+i.name='harry potter'
+
+
+select c.name as Courses 
+from instructor i,instructor_course ic,course c
+where i.id = ic.instructor_id AND ic.course_id = c.id AND
+i.name='harry potter'
+
++------------------+
+| Courses          |
++------------------+
+| Java Programming |
+| SQL Programming  |
+| Java Spring      |
++------------------+
+
+Q2. Display the instructors that are teaching 'Java Programming' course. 
+
+select i.name as Instructors
+from instructor i,instructor_course ic,course c
+where i.id = ic.instructor_id AND ic.course_id = c.id AND 
+c.name='Java Programming'
+
++------------------+
+| Instructors      |
++------------------+
+| harry potter     |
+| hermione granger |
++------------------+
+
+Q3. Display all Instructors that are associated with 'IT' department. 
+
+select i.name as Instructors
+from instructor i,instructor_course ic,course c, department d
+where i.id = ic.instructor_id AND 
+      ic.course_id = c.id AND 
+      c.department_id = d.id AND 
+      d.name='IT'
+
++------------------+
+| Instructors      |
++------------------+
+| harry potter     |
+| harry potter     |
+| ronald weasley   |
+| hermione granger |
++------------------+
+
+
+select distinct i.name as Instructors
+from instructor i,instructor_course ic,course c, department d
+where i.id = ic.instructor_id AND 
+      ic.course_id = c.id AND 
+      c.department_id = d.id AND 
+      d.name='IT'
+
++------------------+
+| Instructors      |
++------------------+
+| harry potter     |
+| ronald weasley   |
+| hermione granger |
++------------------+
+
+Q4. Display the department that instructor with ID=2 belongs to. 
+
+select d.name as Department
+from instructor i,instructor_course ic,course c, department d
+where i.id = ic.instructor_id AND 
+      ic.course_id = c.id AND 
+      c.department_id = d.id AND
+      i.id=2;
+
+
+Q5. Count number of Instructors teaching each course. 
+
+select c.name,COUNT(i.id) as Number_of_Instructors
+from instructor i,instructor_course ic,course c
+where i.id = ic.instructor_id AND ic.course_id = c.id
+group by c.name
+order by Number_of_Instructors DESC
+
+Analysis:
+=========
+[c.name='Java Programming']
+|  1 | harry potter     |  85000 | london    |             1 |         2 |  2 | Java Programming    |     100 |              
+|  3 | hermione granger |  95000 | london    |             3 |         2 |  2 | Java Programming    |     100 |   
+[c.name='SQL Programming']
+|  1 | harry potter     |  85000 | london    |             1 |         3 |  3 | SQL Programming     |      80 |  |  3 | hermione granger |  95000 | london    |             3 |         3 |  3 | SQL Programming     |      80 |  
+[c.name='Java Spring']
+|  1 | harry potter     |  85000 | london    |             1 |         6 |  6 | Java Spring         |     100 | |  2 
+[c.name='Python Programming']
+| ronald weasley   |  75000 | liverpool |             2 |         4 |  4 | Python Programming  |      70 | 
+[c.name='MongoDB']
+|  2 | ronald weasley   |  75000 | liverpool |             2 |         5 |  5 | MongoDB             |      50 |
+[c.name='Angular Programming']
+|  3 | hermione granger |  95000 | london    |             3 |         7 |  7 | Angular Programming |      90 |
+
+
++---------------------+-----------------------+
+| name                | Number_of_Instructors |
++---------------------+-----------------------+
+| Java Programming    |                     2 |
+| SQL Programming     |                     2 |
+| Angular Programming |                     1 |
+| Python Programming  |                     1 |
+| MongoDB             |                     1 |
+| Java Spring         |                     1 |
++---------------------+-----------------------+
+
+Q6. Count the number of Courses for each department.
+
+select d.name,COUNT(c.id)
+from course c,department d
+where c.department_id = d.id 
+group by d.name
+
++-------+-------------+
+| name  | COUNT(c.id) |
++-------+-------------+
+| COMPS |           3 |
+| IT    |           3 |
++-------+-------------+
+
+Q7. Count number of Instructors for each department. 
+
+select d.name,COUNT(distinct i.id)
+from instructor i,instructor_course ic,course c, department d
+where  i.id = ic.instructor_id AND 
+      ic.course_id = c.id AND 
+      c.department_id = d.id
+group by d.name
+
++-------+----------------------+
+| name  | COUNT(distinct i.id) |
++-------+----------------------+
+| COMPS |                    3 |
+| IT    |                    3 |
++-------+----------------------+
+
+NESTED SUB_QUERIES
+==================
+Q1. Display Instructor names teaching course 'Java Programming'
+
+select name
+from instructor
+where id = (select instructor_id 
+            from instructor_course
+            where course_id = (select id 
+                               from course
+                               where name='Java Programming'))
+
+ERROR 1242 (21000): Subquery returns more than 1 row
+
+Analysis
+========
+select name
+from instructor
+where id = (select instructor_id 
+            from instructor_course
+            where course_id = (2))
+
+
+select name
+from instructor
+where id = (1,3)
+[ERROR 1242 (21000): Subquery returns more than 1 row]
+
+
+CORRECT VERSION
+---------------
+select name
+from instructor
+where id IN (select instructor_id 
+            from instructor_course
+            where course_id IN (select id 
+                               from course
+                               where name='Java Programming'))
+
++------------------+
+| name             |
++------------------+
+| harry potter     |
+| hermione granger |
++------------------+
+
+Q2. Display Instructors associated with department 'IT'. 
+[Use Nested queries]
+
+select distinct name as Instructors
+from instructor
+where id IN (select instructor_id 
+            from instructor_course
+            where course_id IN (select id 
+                               from course
+                               where department_id IN (select id
+                                                      from department
+                                                      where name='IT')))
+
++------------------+
+| Instructors      |
++------------------+
+| harry potter     |
+| ronald weasley   |
+| hermione granger |
++------------------+
+
+Q3. Display all instructors that are earning salary more than average salary of instructors. 
+
+select name
+from instructor
+where salary > (select AVG(salary)
+               from instructor)
+
++------------------+
+| name             |
++------------------+
+| hermione granger |
++------------------+
+
+Q4. Display all instructors that are earning salary more than average salary of instructors teaching 'Java Programming'
+
+select name
+from instructor
+where salary > (select AVG(salary)
+                from instructor i,instructor_course ic,course c
+                where i.id = ic.instructor_id AND ic.course_id=c.id AND c.name='Java Programming'
+                group by c.name)
+ 
++------------------+
+| name             |
++------------------+
+| hermione granger |
++------------------+
+
+Working with JOINS
+==================
+-> Inner Join / Join 
+-> Left Join / Left Outer Join 
+-> Right Join / Right Outer Join 
+
+additional concepts
+-------------------
+-> Full outer Join 
+
+
+Inner Join / Join
+==================
+mysql> select *
+    -> from product p join vendor v ON p.vendor_id = v.id;
++----+---------------+--------+-----------+----+-----------------+
+| id | name          | price  | vendor_id | id | vname           |
++----+---------------+--------+-----------+----+-----------------+
+|  1 | Apple Macbook | 120000 |         1 |  1 | ABC Electronics |
+|  2 | Dell Latitude |  90000 |         2 |  2 | XYZ Electronics |
+|  3 | HP Laser Z3   |  95000 |         1 |  1 | ABC Electronics |
++----+---------------+--------+-----------+----+-----------------+
+
+Alternatively, 
+
+mysql> select *
+    -> from product p inner join vendor v ON p.vendor_id = v.id;
++----+---------------+--------+-----------+----+-----------------+
+| id | name          | price  | vendor_id | id | vname           |
++----+---------------+--------+-----------+----+-----------------+
+|  1 | Apple Macbook | 120000 |         1 |  1 | ABC Electronics |
+|  2 | Dell Latitude |  90000 |         2 |  2 | XYZ Electronics |
+|  3 | HP Laser Z3   |  95000 |         1 |  1 | ABC Electronics |
++----+---------------+--------+-----------+----+-----------------+
+
+Left Join
+=========
+In left join, all the relations of left table are part of result set. 
+
+mysql> select *
+    -> from product p left join vendor v ON p.vendor_id = v.id;
++----+---------------+--------+-----------+------+-----------------+
+| id | name          | price  | vendor_id | id   | vname           |
++----+---------------+--------+-----------+------+-----------------+
+|  1 | Apple Macbook | 120000 |         1 |    1 | ABC Electronics |
+|  2 | Dell Latitude |  90000 |         2 |    2 | XYZ Electronics |
+|  3 | HP Laser Z3   |  95000 |         1 |    1 | ABC Electronics |
+|  4 | Lenovo V10    |  87000 |      NULL | NULL | NULL            |
++----+---------------+--------+-----------+------+-----------------+ 
+
+Right Join
+===========
+In Right join, all the relations of Right table are part of result set. 
+
+
+mysql> select *
+    -> from product p right join vendor v ON p.vendor_id = v.id;
++------+---------------+--------+-----------+----+-----------------+
+| id   | name          | price  | vendor_id | id | vname           |
++------+---------------+--------+-----------+----+-----------------+
+|    1 | Apple Macbook | 120000 |         1 |  1 | ABC Electronics |
+|    3 | HP Laser Z3   |  95000 |         1 |  1 | ABC Electronics |
+|    2 | Dell Latitude |  90000 |         2 |  2 | XYZ Electronics |
+| NULL | NULL          |   NULL |      NULL |  3 | PQR Electronics |
++------+---------------+--------+-----------+----+-----------------+
+
+Full Join = Left + Right
+========================
+
+select *
+from product p left join vendor v ON p.vendor_id = v.id
+UNION
+select *
+from product p right join vendor v ON p.vendor_id = v.id;
+
++------+---------------+--------+-----------+------+-----------------+
+| id   | name          | price  | vendor_id | id   | vname           |
++------+---------------+--------+-----------+------+-----------------+
+|    1 | Apple Macbook | 120000 |         1 |    1 | ABC Electronics |
+|    2 | Dell Latitude |  90000 |         2 |    2 | XYZ Electronics |
+|    3 | HP Laser Z3   |  95000 |         1 |    1 | ABC Electronics |
+|    4 | Lenovo V10    |  87000 |      NULL | NULL | NULL            |
+| NULL | NULL          |   NULL |      NULL |    3 | PQR Electronics |
++------+---------------+--------+-----------+------+-----------------+
+ 
+Alternatively, 
+
+mysql> select *
+    -> from product p right outer join vendor v ON p.vendor_id = v.id;
+
+mysql> select *
+    -> from product p left outer join vendor v ON p.vendor_id = v.id;
+
+
+
+
